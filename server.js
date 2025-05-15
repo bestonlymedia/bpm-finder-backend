@@ -1,34 +1,31 @@
 const express = require('express');
 const multer = require('multer');
-const ffmpeg = require('fluent-ffmpeg');
+const mm = require('music-metadata');
 const fs = require('fs');
 const path = require('path');
-const mm = require('music-metadata');
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
 app.post('/analyze', upload.single('file'), async (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded' });
-    }
+  try {
+    const filePath = path.resolve(req.file.path);
+    const metadata = await mm.parseFile(filePath);
+    fs.unlinkSync(filePath); // cleanup
+    const bpm = metadata.common.bpm || null;
 
-    try {
-        const metadata = await mm.parseFile(req.file.path);
-        const bpm = metadata.common.bpm || null;
-        fs.unlinkSync(req.file.path);
-        if (bpm) {
-            res.json({ bpm });
-        } else {
-            res.status(422).json({ error: 'Could not detect BPM from file metadata' });
-        }
-    } catch (err) {
-        fs.unlinkSync(req.file.path);
-        res.status(500).json({ error: 'Error processing file' });
+    if (bpm) {
+      res.json({ bpm });
+    } else {
+      res.json({ error: 'BPM not found in metadata.' });
     }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to analyze file.' });
+  }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000; // ← 🔥 this line is the key
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
