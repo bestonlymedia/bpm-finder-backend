@@ -1,0 +1,15 @@
+{
+  "name": "bpm-finder-backend",
+  "version": "1.0.0",
+  "description": "Express backend that receives uploads and detects BPM",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5",
+    "fluent-ffmpeg": "^2.1.2",
+    "music-metadata": "^7.14.0"
+  }
+}
